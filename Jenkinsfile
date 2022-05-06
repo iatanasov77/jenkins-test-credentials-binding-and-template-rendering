@@ -113,6 +113,7 @@ node ( label: 'php-host' ) {
                 APP_MYSQL_DATABASE  = "JenkinsTest_Staging"
             }
             DATABASE_URL="mysql://$APP_MYSQL_USER:$APP_MYSQL_PASSWORD@127.0.0.1:3306/$APP_MYSQL_DATABASE"
+        }
         
         // Bind FTP Credentials
         withCredentials([usernamePassword(credentialsId: 'ftp-jenkins-test', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
