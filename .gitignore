@@ -3,3 +3,7 @@
 /.project
 /.settings
 ###< Eclipse project files ###
+
+/TEMP
+/vendor
+/composer.lock

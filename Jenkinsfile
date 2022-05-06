@@ -18,16 +18,14 @@ node ( label: 'php-host' ) {
     def GIT_REPO_WITH_CRED;
     def APP_MYSQL_USER;
     def APP_MYSQL_PASSWORD;
-    def APP_MYSQL_DATABASE              = 'JenkinsTest'
+    def APP_MYSQL_DATABASE;
     
     def CONFIG_TEMPLATE;
-    final FTP_DEPLOY_CONFIG_TEMPLATE    = 'ftp_deploy.ini.production'
     final FTP_CONFIG_PATH               = 'ftp_deploy.ini'
     def APP_FTP_URL                     = 'ftp://164.138.221.242/web/project/'
     def APP_FTP_USER;
     def APP_FTP_PASSWORD;
     
-    final SYMFONY_ENV_TEMPLATE          = '.env.production'
     final SYMFONY_ENV_PATH              = '.env'
     def DATABASE_URL;
     
@@ -65,6 +63,37 @@ node ( label: 'php-host' ) {
         }
     }
     
+    stage( 'Source Checkout' ) {
+        if ( BUILD_ENVIRONMENT == 'production' ) {
+            checkout([$class: 'GitSCM', 
+                branches: [[name: "refs/tags/${BRANCH_NAME}"]], 
+                userRemoteConfigs: [[
+                    credentialsId: 'gitlab-iatanasov77', 
+                    refspec: '+refs/tags/*:refs/remotes/origin/tags/*', 
+                    url: "${GIT_REPO_URL}"]]
+            ])
+        } else {
+            git(
+                url: "${GIT_REPO_URL}",
+                credentialsId: 'gitlab-iatanasov77',
+                branch: "${BRANCH_NAME}"
+            )
+        }
+    }
+    
+    stage( 'Phing Build' ) {
+        if ( BUILD_ENVIRONMENT == 'production' ) {
+            sh '''
+                export COMPOSER_HOME='/home/vagrant/.composer';
+                /usr/local/bin/phing install-production -verbose -debug
+            '''
+        } else {
+            sh '''
+                export COMPOSER_HOME='/home/vagrant/.composer';
+                /usr/local/bin/phing install-staging -verbose -debug
+            '''
+        }
+    }
     
     /*
      * TEST CREDENTIALS BINDING
@@ -78,8 +107,12 @@ node ( label: 'php-host' ) {
         withCredentials([usernamePassword(credentialsId: 'mysql-jenkins-test', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {            
             APP_MYSQL_USER      = "$USERNAME"
             APP_MYSQL_PASSWORD  = "$PASSWORD"
+            if ( BUILD_ENVIRONMENT == 'production' ) {
+                APP_MYSQL_DATABASE  = "JenkinsTest_Production"
+            } else {
+                APP_MYSQL_DATABASE  = "JenkinsTest_Staging"
+            }
             DATABASE_URL="mysql://$APP_MYSQL_USER:$APP_MYSQL_PASSWORD@127.0.0.1:3306/$APP_MYSQL_DATABASE"
-        }
         
         // Bind FTP Credentials
         withCredentials([usernamePassword(credentialsId: 'ftp-jenkins-test', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
@@ -97,19 +130,24 @@ node ( label: 'php-host' ) {
      * Find Rendered File in: /var/lib/jenkins/jobs/TEST CREDENTIALS BINDING AND TEMPLATE RENDERING/workspace
      */
     stage( 'Test Template Rendering' ) {
-        CONFIG_TEMPLATE = readFile( FTP_DEPLOY_CONFIG_TEMPLATE )
+        "ftp_deploy.ini.${BUILD_ENVIRONMENT}"
+        CONFIG_TEMPLATE = readFile( "ftp_deploy.ini.${BUILD_ENVIRONMENT}" )
         writeFile file: FTP_CONFIG_PATH,
                 text: vankosoftJob.renderTemplate( CONFIG_TEMPLATE, ['url': APP_FTP_URL, 'user': APP_FTP_USER, 'password': APP_FTP_PASSWORD] )
                 
-        CONFIG_TEMPLATE = readFile( SYMFONY_ENV_TEMPLATE )
+        CONFIG_TEMPLATE = readFile( ".env.${BUILD_ENVIRONMENT}" )
         writeFile file: SYMFONY_ENV_PATH,
-                text: vankosoftJob.renderTemplate( CONFIG_TEMPLATE, ['user': APP_FTP_USER, 'password': APP_FTP_PASSWORD] )
+                text: vankosoftJob.renderTemplate( CONFIG_TEMPLATE, ['database_url': DATABASE_URL] )
     }
     
     stage( 'Ftp Deploy' ) {
-        sh '''
+        sh """
             /usr/bin/php /usr/local/bin/ftpdeploy ${FTP_CONFIG_PATH}
-        '''
+            #/usr/bin/php /usr/local/bin/ftpdeploy ftp_deploy.ini
+            
+            returnCode=\$?   # Capture return code
+            exit \$returnCode
+        """
         // Clear Config
         // sh "rm -f ${FTP_CONFIG_PATH}"
     }
