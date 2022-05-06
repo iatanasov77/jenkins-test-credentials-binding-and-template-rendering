@@ -4,8 +4,8 @@ ini_set( 'display_startup_errors', 1 );
 error_reporting( E_ALL );
 
 require_once dirname( __DIR__ ) . '/vendor/autoload.php';
-$dotenv = new Dotenv\Dotenv();
-$dotenv->load( dirname( __DIR__ ) );
+$dotenv = Dotenv\Dotenv::createMutable( dirname( __DIR__ ) );
+$dotenv->load();
 
 echo '<h1>Jenkins Test Deploy is DONE !!!</h1>';
 echo '<p>================================================</p>';
