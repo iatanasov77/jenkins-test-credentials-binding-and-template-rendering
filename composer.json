@@ -1,0 +1,26 @@
+{
+    "type": "project",
+    "keywords": [
+        "symfony",
+        "vankosoft",
+        "application"
+    ],
+    "homepage": "http://vankosoft.org",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Ivan I. Atanasov"
+        }
+    ],
+    "require": {
+        "php": ">=7.2.5",
+        "vlucas/phpdotenv": "^5.4"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": {
+            "*": "dist"
+        },
+        "sort-packages": true
+    }
+}

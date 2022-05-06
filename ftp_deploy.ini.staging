@@ -39,7 +39,7 @@ ignore = "
 	deploy_production.ini
 	README.md
 	build.xml
-	composer.lock
+    composer.lock
 "
 
 ; explicit list of files and directories to include (by default includes all files and directories)

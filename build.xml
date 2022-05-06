@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="Jenkins_TestCredentialsBindingAndTemplateRendering" default="build">
+    <resolvepath propertyName="root_path" file="./" />
+    
+    <target name="install-production" depends="composer-run"></target>
+    <target name="install-staging" depends="composer-run-with-dev"></target>
+  
+    <target name="composer-run">
+        <if>
+		    <available file="${root_path}/vendor" type="dir" />
+		    <then>
+                <exec command="/usr/local/bin/composer update --no-dev --no-interaction --prefer-dist" returnProperty="vendors_output" />
+            </then>
+            <else>
+                <exec command="/usr/local/bin/composer install --no-dev --no-interaction --prefer-dist" returnProperty="vendors_output" />
+ 			</else>
+        </if>
+    </target>
+    
+    <target name="composer-run-with-dev">
+        <if>
+            <available file="${root_path}/vendor" type="dir" />
+            <then>
+                <exec command="/usr/local/bin/composer update --no-interaction --prefer-dist" returnProperty="vendors_output" />
+            </then>
+            <else>
+                <exec command="/usr/local/bin/composer install --no-interaction --prefer-dist" returnProperty="vendors_output" />
+            </else>
+        </if>
+    </target>
+</project>
