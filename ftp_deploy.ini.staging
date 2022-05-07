@@ -31,15 +31,27 @@ test = no
 ; files and directories to ignore
 ignore = "
 	.git*
-	README.md
-	LICENSE
-	VERSION
-	CHANGELOG.md
-	Jenkinsfile
-	deploy_production.ini
-	README.md
-	build.xml
+    README.md
+    LICENSE
+    VERSION
+    CHANGELOG.md
+    
+    Jenkinsfile
+    /ftp_deploy.ini
+    /ftp_deploy.ini.production
+    /ftp_deploy.ini.staging
+    /.env.production
+    /.env.staging
+
+    build.xml
     composer.lock
+    symfony.lock
+    package.json
+    webpack.config.js
+    yarn.lock
+    yarn-error.log
+    /node_modules
+    /assets
 "
 
 ; explicit list of files and directories to include (by default includes all files and directories)
